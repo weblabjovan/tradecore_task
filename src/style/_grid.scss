@@ -1,0 +1,48 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+// breakpoints map
+$breakpoints: (
+  xs: 560px,
+  sm: 758px,
+  md: 1152px,
+  lg: 1536px,
+  xl: 1632px,
+  xx: 1920px
+);
+
+// media query mixin
+@mixin break($size) {  
+  @media (min-width: map-get($breakpoints, $size)) {
+    @content;
+  }
+}
+
+// number of columns variable
+$items: 12;
+
+// grid container
+.grid {
+  display: flex;
+  flex-flow: row wrap;
+}
+
+// grid item
+.grid__item {
+  padding: 0px 15px;
+}
+
+// loop over the breakpoints
+@each $key, $value in $breakpoints {
+  @for $i from 1 through $items {
+    .grid__item--#{$key}-span-#{$i} {
+      flex: 0 0 100%;
+      @include break($key) {
+        flex: 0 0 #{$i / $items * 100%};
+      }
+    }
+  }
+}
