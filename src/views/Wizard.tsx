@@ -11,7 +11,14 @@ function Wizard() {
 
   return (
     <div className="wizard">
-      <h1 style={page !== "Success" ? { "display":"block"} : { "display":"none"}}>Add Book - New book</h1>
+      {
+        page
+        ?
+        <h1>Add Book - New book</h1>
+        :
+        null
+      }
+      
       {
         page === 'Genre'
         ?

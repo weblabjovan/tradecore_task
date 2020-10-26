@@ -1,4 +1,4 @@
-import { IGenre, IActionTypes, IClearState } from '../interfaces';
+import { IGenre, IActionTypes, IClearState, IState, IInfoform } from '../interfaces';
 
 export const binarySearch = (arr: Array<{id: number}>, id: number): any => { 
   let start=0;
@@ -31,10 +31,10 @@ export const setDateString = (date: Date): string => {
   return `${split[2]}-${split[0].length < 2 ? '0'+split[0] : split[0]}-${split[1].length < 2 ? '0'+split[1] : split[1]}`;
 }
 
-export const changeState = (state: any, type: string, props: any): any => {
+export const changeState = <T extends IState> (state: T, type: string, props: any): T | null => {
   const newState = {...state};
   let next = true;
-  let res = newState;
+  let res: T | null = newState;
 
   //BEFORE CHANGE
   if (!isActionChangingState(state, type,  props)) { next = false; res = null; }
@@ -61,7 +61,8 @@ export const changeState = (state: any, type: string, props: any): any => {
 
  //CHNAGER FUNCTIONS
 
-const setPage = (state: any, newState: any, props: any): any => {
+
+const setPage = <T extends IState> (state: T, newState: any, props: any): T  => {
   const currentPage = state.pageStructure.indexOf(state.page);
   const { direction } = props;
 
@@ -79,14 +80,14 @@ const setPage = (state: any, newState: any, props: any): any => {
   return newState;
 }
 
-const setGenre = (newState: any, props: any): any => {
+const setGenre = <T extends IState> (newState: T, props: any): T => {
   const { id } = props;
   newState.activeGenre = id;
   
   return newState;
 }
 
-const setSubGenre = (state: any, newState: any, props: any): any => {
+const setSubGenre = <T extends IState> (state: T, newState: T, props: any): T => {
   const { id } = props;
   if (id === -1) {
     newState.pageStructure.splice(2, 0, 'Addsubgenre');
@@ -101,7 +102,7 @@ const setSubGenre = (state: any, newState: any, props: any): any => {
   return newState;
 }
 
-const addSubGenre = (newState: any): any => {
+const addSubGenre = <T extends IState> (newState: T): T => {
   const lastGenreIndex = newState.genres.length - 1;
   const lastSubgenreIndex = newState.genres[lastGenreIndex]['subgenres'].length - 1;
   const id = newState.genres[lastGenreIndex]['subgenres'][lastSubgenreIndex]['id'] + 1;
@@ -112,34 +113,36 @@ const addSubGenre = (newState: any): any => {
   return newState;
 }
 
-const changeNewSubgenre = (newState: any, props: any): any => {
+const changeNewSubgenre = <T extends IState> (newState: T, props: any): T => {
   const { value } = props;
   newState.newSubgenre = value;
 
   return newState;
 }
 
-const changeNewSubgenreDesReq = (state:any, newState: any): any => {
+const changeNewSubgenreDesReq = <T extends IState> (state:T, newState: T): T => {
   newState.newSubgenreDesReq = !state.newSubgenreDesReq;
 
   return newState;
 }
 
-const setInforform = (newState: any, props: any): any => {
+const setInforform = <T extends IState> (newState: T, props: any ): T => {
   const { target } = props;
-  newState.infoForm[target.name] = target.value;
+  let key: keyof IInfoform;
+  key = target.name;
+  newState.infoForm[key] = target.value;
 
   return newState;
 }
 
-const setInfoformErrors = (newState: any, props: any): any => {
+const setInfoformErrors = <T extends IState> (newState: T, props: any): T => {
   const { errors } = props;
   newState.infoFormErrors = errors;
 
   return newState;
 }
 
-const fakePostStart = (newState: any): any => {
+const fakePostStart = <T extends IState> (newState: T): T => {
   newState.postStart = true;
   newState.loader = true;
   newState.infoFormErrors = [];
@@ -147,11 +150,11 @@ const fakePostStart = (newState: any): any => {
   return newState;
 }
 
-const resetApp = (newState: any): any => {
+const resetApp = <T extends IState> (newState: T): T => {
   return stateClean(newState, []);
 }
 
-const isActionChangingState = (state: any, type: any, props: any): boolean => {
+const isActionChangingState = <T extends IState> (state: T, type: any, props: any): boolean => {
   let res = true;
   let key: keyof IActionTypes;
   key = type;
@@ -169,13 +172,15 @@ const isActionChangingState = (state: any, type: any, props: any): boolean => {
   }
 
   for (let index = 0; index < typeChangeReference[key].length; index++) {
-    if (typeof state[typeChangeReference[key][index]] !== 'object') {
-      if (state[typeChangeReference[key][index]] === props[Object.keys(props)[0]]) {
+    let stateProp: keyof IState;
+    stateProp = typeChangeReference[key][index] as keyof IState;
+    if (typeof state[stateProp] !== 'object') {
+      if (state[stateProp] === props[Object.keys(props)[0]]) {
         res =  false;
         break;
       }
     }else{
-      if (objectsAreTheSame(state[typeChangeReference[key][index]], props[Object.keys(props)[0]])) {
+      if (objectsAreTheSame(state[stateProp], props[Object.keys(props)[0]])) {
         res =  false;
         break;
       }
@@ -211,7 +216,7 @@ const objectsAreTheSame = (obj1: any, obj2: any): boolean => {
 
 
 
-const cleanState = (type: string, newState: any): any => {
+const cleanState = <T extends IState>  (type: string, newState: T): T => {
   let forbidden: Array<string> = [];
   if (type === "SET_GENRE") { 
     forbidden = ["page", "activeGenre", 'pageStructure'];
@@ -225,7 +230,7 @@ const cleanState = (type: string, newState: any): any => {
   return forbidden.length ? stateClean(newState, forbidden) : newState;
 }
 
-const stateClean = (newState: any, forbidden: Array<string>): any => {
+const stateClean = <T extends IState> (newState: T, forbidden: Array<string>): T => {
   const initialState: IClearState = {
     page: 'Genre',
     activeGenre: 0,
@@ -264,7 +269,7 @@ const stateClean = (newState: any, forbidden: Array<string>): any => {
 }
 
 
-export const changeStateAsync = async (state: any, dispatch: any, type: string, props: any): Promise<any> => {
+export const changeStateAsync = async <T extends IState> (state: T, dispatch: any, type: string, props: any): Promise<T> => {
   const newState = {...state};
   let next = true;
   let res = newState;
@@ -278,7 +283,7 @@ export const changeStateAsync = async (state: any, dispatch: any, type: string, 
   return res;
 }
 
-const testPost = async (state: any, newState: any, dispatch: any): Promise<any> => {
+const testPost = async <T extends IState> (state: T, newState: any, dispatch: any): Promise<any> => {
   return setTimeout(() => {
     try {
       newState.postSuccess = true;

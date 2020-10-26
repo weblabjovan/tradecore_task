@@ -56,11 +56,11 @@ function Infoform() {
 
   React.useEffect(() => {
     if (!prevPostStart && postStart) { changeStateAsync("FAKE_POST", {}); }
-  });
+  }, [postStart, changeStateAsync]);
 
   React.useEffect(() => {
     if (!prevPostSuccess && postSuccess) { console.log({...infoForm, genre: activeGenre, subgenre: activeSubgenre }); changeState("SET_PAGE", {direction: "next"}); }
-  });
+  }, [postSuccess, changeState]);
 
   return (
     <div>
